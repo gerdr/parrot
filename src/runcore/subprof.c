@@ -882,7 +882,7 @@ free_profile_data(PARROT_INTERP, ARGIN(subprofiledata *spdata))
 #if defined(__GNUC__) && (defined(__i386) || defined(__x86_64))
 static __inline__ UHUGEINTVAL
 getticks(void) {
-    uint32_t lo, hi; 
+    unsigned lo, hi; 
     __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
     return (UHUGEINTVAL)hi << 32 | lo; 
 }

@@ -23,11 +23,8 @@ Win32 System Programming, 2nd Edition.
 
 #include "parrot/parrot.h"
 #include "../../io/io_private.h"
-#include "path.h"
-
 #include <windows.h>
-
-#include<Windows.h>
+#include "path.h"
 
 /* HEADERIZER HFILE: none */
 
