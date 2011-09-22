@@ -36,6 +36,8 @@ This file implements OS-specific file functions for Win32 platforms.
 #define SLASH "\\"
 #endif
 
+#include<Windows.h>
+
 #define THROW(msg) Parrot_ex_throw_from_c_args(interp, NULL, \
     EXCEPTION_EXTERNAL_ERROR, "%s failed: %Ss", (msg), \
     Parrot_platform_strerror(interp, GetLastError()))

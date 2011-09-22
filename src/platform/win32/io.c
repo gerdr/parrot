@@ -27,6 +27,8 @@ Win32 System Programming, 2nd Edition.
 
 #include <windows.h>
 
+#include<Windows.h>
+
 /* HEADERIZER HFILE: none */
 
 /* HEADERIZER BEGIN: static */
@@ -50,8 +52,6 @@ static void convert_flags_to_win32(
     , PARROT_ASSERT_ARG(fdwCreate))
 /* Don't modify between HEADERIZER BEGIN / HEADERIZER END.  Your changes will be lost. */
 /* HEADERIZER END: static */
-
-#define PIO_TRACE 0
 
 /*
 
