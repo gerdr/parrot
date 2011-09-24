@@ -4,27 +4,29 @@
 
 =head1 NAME
 
-    tools/release/auto_release.pl - automates the release process
+tools/release/auto_release.pl - automates the release process
 
 =head1 SYNOPSIS
 
-    % perl tools/release/auto_release.pl [OPTION]... VERSION
+    $ perl tools/release/auto_release.pl [OPTION]... VERSION
 
 =head1 DESCRIPTION
 
-This script fully automates much of the process of packaging a release.
+This script fully automates much of the process of packaging a release. It
+handles tasks such as running tests, creating tarballs, tagging the release,
+etc.
+
+If you are familiar with the Release Manager Guide
+(F<docs/project/release_manager_guide.pod>), this script can take care of
+everything up until section IX.
 
 =head1 OPTIONS
 
 =over 4
 
-=item B<-v>, B<--version>=I<a.b.c>
+=item B<-h>, B<--help>
 
-Specifies the new release version. Must be a string of the form a.b.c (e.g.
-3.8.0).
-
-The release version passed to C<-v> always takes precedence over the one given
-as C<VERSION> (if any).
+Displays help message and exits.
 
 =item B<-d>, B<--developer>
 
@@ -36,6 +38,27 @@ developer release by default. It's merely provided for the sake of consistency.
 =item B<-s>, B<--supported>
 
 Builds a supported release. Cannot be used in conjunction with C<-d>.
+
+=item B<-t>, B<--test-jobs>=I<n>
+
+Represents the number of test harnesses to run simultaneously when the test
+suite is being run. If given, it's value will override the one in the
+C<$TEST_JOBS> environment variable.
+
+If not given, it will default to 1 unless C<$TEST_JOBS> is defined; in which
+case, C<$TEST_JOBS> will be used as a default.
+
+Using the C<-t> switch (or C<$TEST_JOBS>) is strongly recommended as it can
+significantly reduce the amount of time spent on running the test suite which
+can take up to several minutes.
+
+=item B<-v>, B<--version>=I<a.b.c>
+
+Specifies the new release version. Must be a string of the form a.b.c (e.g.
+3.8.0).
+
+The release version passed to C<-v> always takes precedence over the one given
+as C<VERSION> (if any).
 
 =back
 
@@ -53,25 +76,33 @@ use 5.008;
 use strict;
 use warnings;
 
-use Env qw(EDITOR);
 use Getopt::Long;
+use Pod::Usage;
 use System::Command;
 
-# TODO  Be more verbose in perldoc
-# TODO  Migrate code from update_version.pl
-# TODO  Edit '== ==' strings so that newlines are on top and bottom
+# TODO Migrate code from update_version.pl
+# TODO Edit '== ==' strings so that newlines are on top and bottom
 
-my $version;      # Version number
-my $developer;    # Developer release
-my $supported;    # Supported release
-my $type;         # Developer or supported
+# Switches
+my $version;          # Version number
+my $developer;        # Developer release
+my $supported;        # Supported release
+my $test_jobs = 1;    # Number of parallel test harnesses
+my $help;             # Displays help message
 
-my $result = GetOptions('v|version=s' => \$version,
-                        'd|developer' => \$developer,
-                        's|supported' => \$supported);
+my $type;             # Developer or supported release
+
+my $result = GetOptions('v|version=s'   => \$version,
+                        'd|developer'   => \$developer,
+                        's|supported'   => \$supported,
+                        't|test-jobs=i' => \$test_jobs,
+                        'h|help'        => \$help);
 
 # Catch unrecognized switches
-stop('Unrecognized option') unless $result;
+pod2usage() unless $result;
+
+# Display help message if -h was given
+pod2usage(0) if $help;
 
 # Determine whether to build a developer or supported release
 set_release_type(\$developer, \$supported, \$type);
@@ -115,6 +146,7 @@ prepare_tarball();
 verify_new_version($version, $type);
 tag_release($version);
 push_to_ftp_server($version, $type);
+crow();
 
 ##########################
 # Subroutine definitions #
@@ -135,7 +167,12 @@ sub build_and_run_tests {
     print "== RUNNING FULL TEST SUITE ==\n";
 
     # XXX Use separate filehandles to redirect stderr/stdout to log file
-    system('make', 'fulltest') == 0 or stop();
+    if (defined $ENV{'TEST_JOBS'}) {
+        system('make', 'fulltest', $ENV{'TEST_JOBS'}) == 0 or stop();
+    }
+    else {
+        system('make', 'fulltest', $test_jobs)        == 0 or stop();
+    }
 
     #_edit('make_fulltest.log');
 }
@@ -145,7 +182,7 @@ sub build_old_version {
     print "== REBUILDING PARROT ==\n";
 
     system('perl', 'Configure.pl') == 0 or stop();
-    system('make -j5')                 == 0 or stop();
+    system('make')                 == 0 or stop();
 }
 
 # Verifies that there aren't any uncommitted local changes
@@ -223,11 +260,35 @@ sub commit_changes {
     system('git', 'push', 'origin', 'master') == 0 or stop();
 }
 
+# Generates release announcement using `crow.pir`
+sub crow {
+    my $announcement = 'release_announcement.txt';
+
+    print "== GENERATING ANNOUNCEMENT MESSAGE ==\n";
+
+    open my $CROW,        '-|', './parrot tools/release/crow.pir --type=text' or stop();
+    open my $CROW_OUTPUT, '>',  $announcement                                 or stop();
+
+    while (<$CROW>) {
+        print $CROW_OUTPUT $_;
+    }
+
+    close $CROW;
+    close $CROW_OUTPUT;
+
+    _edit($announcement);
+}
+
 # Runs distribution tests
 sub distro_tests {
     print "== RUNNING DISTRIBUTION TESTS ==\n";
 
-    system('make', 'distro_tests') == 0 or stop();
+    if (defined $ENV{'TEST_JOBS'}) {
+        system('make', 'distro_tests', $ENV{'TEST_JOBS'}) == 0 or stop();
+    }
+    else {
+        system('make', 'distro_tests', $test_jobs)        == 0 or stop();
+    }
 }
 
 # Clones a local copy of 'master' branch
@@ -464,12 +525,13 @@ sub _edit {
 
         chomp $answer;
 
+        # XXX Use an OS-dependent solution (with $^O) for the default editor
         if ($answer eq 'y') {
-            if (defined($EDITOR)) {
-                system("$EDITOR $doc") == 0 or stop();
+            if (defined $ENV{'EDITOR'}) {
+                system("$ENV{'EDITOR'} $doc") == 0 or stop();
             }
             else {
-                system("vim $doc") == 0 or stop();
+                system("vim $doc")            == 0 or stop();
             }
 
             last;
