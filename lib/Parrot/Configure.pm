@@ -199,7 +199,7 @@ sub add_steps {
     for ( my $i = 0 ; $i <= $#new_steps ; $i++ ) {
         $conf->add_step( $new_steps[$i] );
         push @{ $conf->{list_of_steps} }, $new_steps[$i];
-        $conf->{hash_of_steps}->{ $new_steps[$i] } = $i + 1;
+        $conf->{hash_of_steps}->{ $new_steps[$i] } = $i;
     }
 
     return 1;
@@ -220,15 +220,9 @@ B<Note:> See C<_run_this_step()> for the skipping logic.
 
 sub skip_step {
     my ( $conf, $step ) = @_;
-    my $steps = $conf->steps;
 
-    # linear search - optimize when necessary
-    for ( 0..$#$steps ) {
-        if ( $steps->[$_]->step eq $step ) {
-            $steps->[$_]->{skip} = 1;
-            last;
-        }
-    }
+    $conf->steps->[$conf->{hash_of_steps}->{$step}]->{skip} = 1
+        if exists $conf->{hash_of_steps}->{$step};
 }
 
 =item * C<runsteps()>
@@ -449,7 +443,7 @@ sub _run_this_step {
             return;
         }
     }
-    
+
     # A Parrot configuration step can run successfully, but if it fails to
     # achieve its objective it is supposed to return an undefined status.
     if ( $ret ) {
