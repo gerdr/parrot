@@ -205,6 +205,32 @@ sub add_steps {
     return 1;
 }
 
+=item * C<skip_step()>
+
+Marks a step which has already been added to the execution queue
+so it will be skipped. In particular, this allows the executing step
+to disable a subsequent one.
+
+Accepts the name of the step and sets the C<skip> field of the corresponding
+Parrot::Configure::Task object to 1.
+
+B<Note:> See C<_run_this_step()> for the skipping logic.
+
+=cut
+
+sub skip_step {
+    my ( $conf, $step ) = @_;
+    my $steps = $conf->steps;
+
+    # linear search - optimize when necessary
+    for ( 0..$#$steps ) {
+        if ( $steps->[$_]->step eq $step ) {
+            $steps->[$_]->{skip} = 1;
+            last;
+        }
+    }
+}
+
 =item * C<runsteps()>
 
 Sequentially executes steps in the order they were registered.  The invoking
@@ -372,8 +398,6 @@ sub _run_this_step {
     my $conf = shift;
     my $args = shift;
 
-    return $args->{task}->{skip} if defined $args->{task}->{skip};
-
     my $step_name   = $args->{task}->step;
 
     eval "use $step_name;"; ## no critic (BuiltinFunctions::ProhibitStringyEval)
@@ -409,46 +433,54 @@ sub _run_this_step {
         print "\n" if $args->{verbose_step};
     }
 
-    my $ret;
     # When successful, a Parrot configuration step now returns 1
-    eval { $ret = $step->runstep($conf); };
-    if ($@) {
-        carp "\nstep $step_name died during execution: $@\n";
-        return;
+    my $ret;
+
+    # Skip tasks marked via C<skip_step()>
+    if ( $args->{task}->{skip} ) {
+        $conf->debug(" (skipped) ");
+        $step->set_result('skipped');
+        $ret = 1;
     }
     else {
-        # A Parrot configuration step can run successfully, but if it fails to
-        # achieve its objective it is supposed to return an undefined status.
-        if ( $ret ) {
-            # reset verbose value for the next step
-            $conf->options->set( verbose => $args->{verbose} );
-            unless ($args->{silent}) {
-                _finish_printing_result(
-                    {
-                        step        => $step,
-                        step_name   => $step_name,
-                        args        => $args,
-                        description => $step->description,
-                        length_message => $length_message,
-                    }
-                );
-            }
-            if ($conf->options->get(q{configure_trace}) ) {
-                _update_conftrace(
-                    {
-                        conftrace   => $conftrace,
-                        step_name   => $step_name,
-                        conf        => $conf,
-                        sto         => $sto,
-                    }
-                );
-            }
-            return 1;
-        }
-        else {
-            _failure_message( $step, $step_name );
+        eval { $ret = $step->runstep($conf); };
+        if ($@) {
+            carp "\nstep $step_name died during execution: $@\n";
             return;
         }
+    }
+    
+    # A Parrot configuration step can run successfully, but if it fails to
+    # achieve its objective it is supposed to return an undefined status.
+    if ( $ret ) {
+        # reset verbose value for the next step
+        $conf->options->set( verbose => $args->{verbose} );
+        unless ($args->{silent}) {
+            _finish_printing_result(
+                {
+                    step        => $step,
+                    step_name   => $step_name,
+                    args        => $args,
+                    description => $step->description,
+                    length_message => $length_message,
+                }
+            );
+        }
+        if ($conf->options->get(q{configure_trace}) ) {
+            _update_conftrace(
+                {
+                    conftrace   => $conftrace,
+                    step_name   => $step_name,
+                    conf        => $conf,
+                    sto         => $sto,
+                }
+            );
+        }
+        return 1;
+    }
+    else {
+        _failure_message( $step, $step_name );
+        return;
     }
 }
 

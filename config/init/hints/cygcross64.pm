@@ -12,18 +12,6 @@ sub _real_path {
     return $path;
 }
 
-sub _remove_step {
-    my ($conf, $step) = @_;
-    my $steps = $conf->steps;
-
-    for (0..$#$steps) {
-        if ($steps->[$_]->step eq $step) {
-            $steps->[$_]->{skip} = 1;
-            last;
-        }
-    }
-}
-
 sub runstep {
     my (undef, $conf) = @_;
 
@@ -44,7 +32,7 @@ sub runstep {
     $conf->data->set(cygcross => 1);
 
     # Hardcode architecture
-    _remove_step $conf, 'auto::arch';
+    $conf->skip_step('auto::arch');
     $conf->data->set(
         archname    => 'x86_64-w64-mingw32',
         cpuarch     => 'amd64'
