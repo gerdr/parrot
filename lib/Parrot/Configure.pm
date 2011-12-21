@@ -372,6 +372,8 @@ sub _run_this_step {
     my $conf = shift;
     my $args = shift;
 
+    return $args->{task}->{skip} if defined $args->{task}->{skip};
+
     my $step_name   = $args->{task}->step;
 
     eval "use $step_name;"; ## no critic (BuiltinFunctions::ProhibitStringyEval)

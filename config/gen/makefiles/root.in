@@ -20,7 +20,7 @@ VERSION         = @VERSION@$(DEVEL)
 SOVERSION       = @VERSION@
 
 CONFIG_ARGS     = @configure_args@
-#IF(win32):SHELL           = CMD
+#IF(win32 and not cygcross):SHELL           = CMD
 
 # Override at least PREFIX with the install location if you're going
 # to be using this outside of your build area.
@@ -879,7 +879,7 @@ $(PARROTOLD) : frontend/parrot/main$(O) $(GEN_HEADERS) $(LIBPARROT) \
 	$(LINK) @ld_out@$@ \
 	frontend/parrot/main$(O) src/parrot_config$(O) src/longopt$(O) \
 	$(RPATH_BLIB) $(ALL_PARROT_LIBS) $(LINKFLAGS) $(LINK_DYNAMIC)
-#IF(win32):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
+#IF(win32 and not cygcross):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
 
 $(PARROT) : frontend/parrot2/main$(O) $(GEN_HEADERS) $(LIBPARROT) \
 	src/parrot_config$(O) src/longopt$(O) \
@@ -887,7 +887,7 @@ $(PARROT) : frontend/parrot2/main$(O) $(GEN_HEADERS) $(LIBPARROT) \
 	$(LINK) @ld_out@$@ \
 	frontend/parrot2/main$(O) frontend/parrot2/prt0.pbc$(O) src/parrot_config$(O) src/longopt$(O) \
 	$(RPATH_BLIB) $(ALL_PARROT_LIBS) $(LINKFLAGS) $(LINK_DYNAMIC)
-#IF(win32):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
+#IF(win32 and not cygcross):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
 
 
 $(PBC_TO_EXE) : $(DEV_TOOLS_DIR)/pbc_to_exe.pir runtime/parrot/library/config.pir $(PARROT) $(DYNEXT_DIR)/os$(LOAD_EXT) $(DYNEXT_DIR)/file$(LOAD_EXT)
@@ -920,7 +920,7 @@ $(MINIPARROT) : frontend/parrot/main$(O) include/parrot/api.h include/parrot/lon
 	src/null_config$(O) src/longopt$(O)
 	$(LINK) @ld_out@$@ frontend/parrot/main$(O) src/null_config$(O) src/longopt$(O) \
 	$(RPATH_BLIB) $(ALL_PARROT_LIBS) $(LINKFLAGS)
-#IF(win32):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
+#IF(win32 and not cygcross):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
 
 $(INSTALLABLEPARROT) : frontend/parrot2/main$(O) $(GEN_HEADERS) $(LIBPARROT) \
 	src/install_config$(O) src/longopt$(O) \
@@ -928,7 +928,7 @@ $(INSTALLABLEPARROT) : frontend/parrot2/main$(O) $(GEN_HEADERS) $(LIBPARROT) \
 	$(LINK) @ld_out@$@ \
 	frontend/parrot2/main$(O) src/install_config$(O) src/longopt$(O) \
 	frontend/parrot2/prt0.pbc$(O) @rpath_lib@ $(ALL_PARROT_LIBS) $(LINKFLAGS)
-#IF(win32):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
+#IF(win32 and not cygcross):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
 
 $(INC_DIR)/context.h : $(INC_PMC_DIR)/pmc_callcontext.h
 
@@ -1058,7 +1058,7 @@ PARROT_LIBS: \
 $(LIBPARROT_STATIC) : $(O_FILES)
 	$(MKPATH) @blib_dir@
 	$(AR_CR) @ar_out@$@ @ar_extra@ $(O_FILES)
-#IF(win32):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;2
+#IF(win32 and not cygcross):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;2
 	$(RANLIB) $@
 
 $(LIBPARROT_SHARED) : $(O_FILES)
@@ -1067,7 +1067,7 @@ $(LIBPARROT_SHARED) : $(O_FILES)
 #IF(cygwin):		-Wl,--out-implib=libparrot.dll.a \
 #IF(win32 and cc==gcc):		-Wl,--out-implib=libparrot.lib \
 		$(O_FILES) $(C_LIBS) $(ICU_SHARED)
-#IF(win32):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;2
+#IF(win32 and not cygcross):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;2
 #IF(libparrot_shared_alias):	( cd @blib_dir@ ; ln -sf @libparrot_shared@ @libparrot_shared_alias@ )
 	$(CP) tools/dev/gdb-pp-load.py @blib_dir@/@libparrot_shared@-gdb.py
 	$(CP) tools/dev/gdb-pp.py @blib_dir@/GDBPrettyPrint.py
@@ -1100,14 +1100,14 @@ $(PDB) : frontend/parrot_debugger/main$(O) src/parrot_config$(O) $(LIBPARROT)
 	frontend/parrot_debugger/main$(O) \
 	src/parrot_config$(O) \
 	$(RPATH_BLIB) $(ALL_PARROT_LIBS) $(LINKFLAGS)
-#IF(win32):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
+#IF(win32 and not cygcross):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
 
 $(INSTALLABLEPDB) : frontend/parrot_debugger/main$(O) $(LIBPARROT) src/parrot_config$(O)
 	$(LINK) @ld_out@$@ \
 	frontend/parrot_debugger/main$(O) \
 	src/parrot_config$(O) \
 	@rpath_lib@ $(ALL_PARROT_LIBS) $(LINKFLAGS)
-#IF(win32):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
+#IF(win32 and not cygcross):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
 
 #
 # Parrot Disassembler
@@ -1124,7 +1124,7 @@ $(DIS) : frontend/pbc_disassemble/main$(O) $(LIBPARROT)
 	frontend/pbc_disassemble/main$(O) \
 	src/longopt$(O) \
 	$(RPATH_BLIB) $(ALL_PARROT_LIBS) $(LINKFLAGS)
-#IF(win32):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
+#IF(win32 and not cygcross):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
 
 $(INSTALLABLEDIS) : frontend/pbc_disassemble/main$(O) \
 	src/install_config$(O) $(LIBPARROT)
@@ -1132,7 +1132,7 @@ $(INSTALLABLEDIS) : frontend/pbc_disassemble/main$(O) \
 	frontend/pbc_disassemble/main$(O) \
 	src/longopt$(O) \
 	@rpath_lib@ $(ALL_PARROT_LIBS) $(LINKFLAGS)
-#IF(win32):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
+#IF(win32 and not cygcross):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
 
 #
 # Parrot Dump
@@ -1145,7 +1145,7 @@ $(PDUMP) : frontend/pbc_dump/main$(O) frontend/pbc_dump/packdump$(O) $(LIBPARROT
 	frontend/pbc_dump/main$(O) \
 	src/longopt$(O) \
 	frontend/pbc_dump/packdump$(O) $(RPATH_BLIB) $(ALL_PARROT_LIBS) $(LINKFLAGS)
-#IF(win32):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
+#IF(win32 and not cygcross):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
 
 frontend/pbc_dump/main$(O) : \
 	$(INC_DIR)/longopt.h \
@@ -1163,7 +1163,7 @@ $(INSTALLABLEPDUMP) : frontend/pbc_dump/main$(O) frontend/pbc_dump/packdump$(O) 
 	frontend/pbc_dump/packdump$(O) \
 	src/longopt$(O) \
 	@rpath_lib@ $(ALL_PARROT_LIBS) $(LINKFLAGS)
-#IF(win32):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
+#IF(win32 and not cygcross):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
 
 
 
@@ -1177,7 +1177,7 @@ $(PBC_MERGE) : frontend/pbc_merge/main$(O) $(LIBPARROT) src/parrot_config$(O)
 	src/parrot_config$(O) \
 	src/longopt$(O) \
 	$(RPATH_BLIB) $(ALL_PARROT_LIBS) $(LINK_DYNAMIC) $(LINKFLAGS)
-#IF(win32):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
+#IF(win32 and not cygcross):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
 
 $(INSTALLABLEPBC_MERGE) : frontend/pbc_merge/main$(O) $(LIBPARROT) $(INSTALLABLECONFIG)
 	$(LINK) @ld_out@$@ \
@@ -1185,7 +1185,7 @@ $(INSTALLABLEPBC_MERGE) : frontend/pbc_merge/main$(O) $(LIBPARROT) $(INSTALLABLE
 	src/install_config$(O) \
 	src/longopt$(O) \
 	@rpath_lib@ $(ALL_PARROT_LIBS) $(LINKFLAGS)
-#IF(win32):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
+#IF(win32 and not cygcross):	if exist $@.manifest mt.exe -nologo -manifest $@.manifest -outputresource:$@;1
 
 #
 # Profiling runcore test supporting code

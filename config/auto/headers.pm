@@ -113,6 +113,9 @@ sub _list_extra_headers {
         push @extra_headers, qw(sal.h);
     }
 
+# FIXME
+push @extra_headers, 'sysmman.h';
+
     return @extra_headers;
 }
 
