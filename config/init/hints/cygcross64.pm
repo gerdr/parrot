@@ -42,7 +42,7 @@ sub runstep {
     );
 
     # Assume Windows 2000 or above
-    $conf->data->set(ccflags => '-DWINVER=0x0500 ');
+    $conf->data->set(ccflags => '-DWIN32 -DWINVER=0x0500 ');
 
     # Create Parrot as shared library
     $conf->data->set(
