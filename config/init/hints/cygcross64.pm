@@ -55,6 +55,14 @@ sub runstep {
         sym_import          => '__declspec(dllimport)'
     );
 
+    # Setup default cross toolchain
+    $conf->data->set(cc => 'x86_64-w64-mingw32-gcc')
+        unless $conf->options->get('cc');
+    $conf->data->set(ld => 'x86_64-w64-mingw32-gcc')
+        unless $conf->options->get('ld');
+    $conf->data->set(link => 'x86_64-w64-mingw32-gcc')
+        unless $conf->options->get('link');
+
     # Remove incorrect default library path
     my $ldflags = $conf->data->get('ldflags');
     my $linkflags = $conf->data->get('linkflags');
