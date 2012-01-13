@@ -104,6 +104,12 @@ sub _list_extra_headers {
         push @extra_headers, qw(sysmman.h netdb.h sys/utsname.h);
     }
 
+    # necessary when cross-compiling Windows binaries via Cygwin
+    # shouldn't hurt the vanilla Cygwin build
+    if ( $conf->data->get('OSNAME_provisional') eq "cygwin" ) {
+        push @extra_headers, qw(sysmman.h);
+    }
+
     if ( $conf->data->get('OSNAME_provisional') eq "MSWin32" ) {
         # Microsoft provides two annotations mechanisms.  __declspec, which
         # has been around for a while, and Microsoft's standard source code
@@ -112,9 +118,6 @@ sub _list_extra_headers {
         # <http://msdn2.microsoft.com/en-us/library/dabb5z75(VS.80).aspx>.
         push @extra_headers, qw(sal.h);
     }
-
-# FIXME
-push @extra_headers, 'sysmman.h';
 
     return @extra_headers;
 }
