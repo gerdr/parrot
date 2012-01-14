@@ -93,6 +93,10 @@ sub runstep {
     $cwd = `cd '$cwd' && pwd -W`, chomp $cwd
         if $conf->data->get('osname') eq 'msys';
 
+    # expand cygwin virtual paths in case of cross-compilation
+    $cwd = `cygpath --mixed '$cwd'`, chomp $cwd
+        if $conf->data->get('cygcross');
+
     # escape spaces in current directory
     $cwd =~ s{ }{\\ }g;
 

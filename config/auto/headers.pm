@@ -104,10 +104,9 @@ sub _list_extra_headers {
         push @extra_headers, qw(sysmman.h netdb.h sys/utsname.h);
     }
 
-    # necessary when cross-compiling Windows binaries via Cygwin
-    # shouldn't hurt the vanilla Cygwin build
-    if ( $conf->data->get('OSNAME_provisional') eq "cygwin" ) {
-        push @extra_headers, qw(sysmman.h);
+    # more extra_headers needed when cross-compiling Windows binaries via Cygwin
+    if ( $conf->data->get('cygcross') ) {
+        push @extra_headers, qw(sysmman.h sys/utsname.h);
     }
 
     if ( $conf->data->get('OSNAME_provisional') eq "MSWin32" ) {
