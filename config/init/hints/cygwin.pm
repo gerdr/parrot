@@ -1,4 +1,4 @@
-# Copyright (C) 2005-2011, Parrot Foundation.
+# Copyright (C) 2005, Parrot Foundation.
 
 package init::hints::cygwin;
 
@@ -49,18 +49,10 @@ sub runstep {
         sym_export          => '__declspec(dllexport)',
         sym_import          => '__declspec(dllimport)',
         libparrot_shared    => $libparrot_shared,
-    );
-
-    # Setup built Parrot
-    $conf->data->set(
-        libparrot_ldflags   => '-L. -lparrot',
-        libparrot_linkflags => '-L. -lparrot',
-    );
-
-    # Setup installed Parrot
-    $conf->data->set(
-        inst_libparrot_ldflags   => "-L$bindir -lparrot",
-        inst_libparrot_linkflags => "-L$bindir -lparrot"
+        libparrot_ldflags   => '-L' . $build_dir . ' -lparrot',
+        inst_libparrot_ldflags => '-L' . $bindir . ' -lparrot',
+        libparrot_linkflags   => '-L' . $build_dir . ' -lparrot',
+        inst_libparrot_linkflags => '-L' . $bindir . ' -lparrot',
     );
 
     # inet_aton needs to be defined on Cygwin.
