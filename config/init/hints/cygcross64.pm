@@ -62,6 +62,12 @@ sub runstep {
         unless $conf->options->get('ld');
     $conf->data->set(link => 'x86_64-w64-mingw32-gcc')
         unless $conf->options->get('link');
+    $conf->data->set(cxx => 'x86_64-w64-mingw32-g++')
+        unless $conf->options->get('cxx');
+    $conf->data->set(ar => 'x86_64-w64-mingw32-ar')
+        unless $conf->options->get('ar');
+    $conf->data->set(as => 'x86_64-w64-mingw32-as')
+        unless $conf->options->get('as');
 
     # Remove incorrect default library path
     my $ldflags = $conf->data->get('ldflags');
