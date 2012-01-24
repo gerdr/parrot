@@ -1,4 +1,4 @@
-# Copyright (C) 2005-2011, Parrot Foundation.
+# Copyright (C) 2005-2012, Parrot Foundation.
 
 package init::hints::cygcross64;
 
@@ -14,9 +14,6 @@ sub _real_path {
 
 sub runstep {
     my (undef, $conf) = @_;
-
-    # Use 64-bit integers
-    $conf->options->set(intval => 'long long');
 
     # Translate absolute paths from UNIX-style to Windows-style
     my @keys = qw{prefix exec_prefix bindir build_dir tempdir libdir includedir};
