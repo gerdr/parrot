@@ -460,9 +460,11 @@ client lets you.
 
 =item 3
 
-Modify the topic on C<#parrot>:
+Modify the topic on C<#parrot>, for example,
 
-    /topic #parrot Parrot 0.4.8 Released | http://parrot.org/
+    /topic #parrot Parrot 4.0.0 "[Name of Parrot Release]" | 
+    http://parrot.org/ | Log: http://irclog.perlgeek.de/parrot | 
+    #parrotsketch meeting Tuesday 19:30 UTC
 
 =item 4
 
@@ -502,7 +504,6 @@ L<http://www.google.com/calendar/render?cid=ldhctdamsgfg5a1cord52po9h8@group.cal
 
 Versions with an asterisk (*) are supported releases:
 
-    - Feb 21, 2012 - 4.1.0   - alvis
     - Mar 20, 2012 - 4.2.0   - dukeleto
     - Apr 17, 2012 - 4.3.0   - cotto
     - May 15, 2012 - 4.4.0   - ??
