@@ -115,7 +115,7 @@ pmclass Handle provides Handle manual_attrs {
                 break;
             default:
                 Parrot_ex_throw_from_c_args(INTERP, NULL, EXCEPTION_PIO_ERROR,
-                    "Handle: Cannot set pointer %d", key);
+                    "Handle: Cannot set integer %d", key);
         }
     }
 
