@@ -35,6 +35,12 @@ static void io_stringhandle_adv_position(PARROT_INTERP,
         __attribute__nonnull__(2)
         FUNC_MODIFIES(*handle);
 
+static void io_stringhandle_apply_flag(PARROT_INTERP,
+    ARGIN(PMC *handle),
+    INTVAL flag)
+        __attribute__nonnull__(1)
+        __attribute__nonnull__(2);
+
 static INTVAL io_stringhandle_close(PARROT_INTERP, ARGMOD(PMC *handle))
         __attribute__nonnull__(1)
         __attribute__nonnull__(2)
@@ -52,10 +58,6 @@ static const STR_VTABLE * io_stringhandle_get_encoding(PARROT_INTERP,
         __attribute__nonnull__(1)
         __attribute__nonnull__(2);
 
-static INTVAL io_stringhandle_get_flags(PARROT_INTERP, ARGIN(PMC *handle))
-        __attribute__nonnull__(1)
-        __attribute__nonnull__(2);
-
 static PIOHANDLE io_stringhandle_get_piohandle(PARROT_INTERP,
     ARGIN(PMC *handle))
         __attribute__nonnull__(1)
@@ -63,11 +65,6 @@ static PIOHANDLE io_stringhandle_get_piohandle(PARROT_INTERP,
 
 static PIOOFF_T io_stringhandle_get_position(PARROT_INTERP,
     ARGMOD(PMC *handle))
-        __attribute__nonnull__(1)
-        __attribute__nonnull__(2)
-        FUNC_MODIFIES(*handle);
-
-static INTVAL io_stringhandle_is_eof(PARROT_INTERP, ARGMOD(PMC *handle))
         __attribute__nonnull__(1)
         __attribute__nonnull__(2)
         FUNC_MODIFIES(*handle);
@@ -98,6 +95,12 @@ static INTVAL io_stringhandle_read_b(PARROT_INTERP,
         FUNC_MODIFIES(*handle)
         FUNC_MODIFIES(*buffer);
 
+static INTVAL io_stringhandle_remove_flag(PARROT_INTERP,
+    ARGIN(PMC *handle),
+    INTVAL flag)
+        __attribute__nonnull__(1)
+        __attribute__nonnull__(2);
+
 static PIOOFF_T io_stringhandle_seek(PARROT_INTERP,
     ARGMOD(PMC *handle),
     PIOOFF_T offset,
@@ -105,12 +108,6 @@ static PIOOFF_T io_stringhandle_seek(PARROT_INTERP,
         __attribute__nonnull__(1)
         __attribute__nonnull__(2)
         FUNC_MODIFIES(*handle);
-
-static void io_stringhandle_set_flags(PARROT_INTERP,
-    ARGIN(PMC *handle),
-    INTVAL flags)
-        __attribute__nonnull__(1)
-        __attribute__nonnull__(2);
 
 static void io_stringhandle_set_position(PARROT_INTERP,
     ARGMOD(PMC *handle),
@@ -140,6 +137,9 @@ static INTVAL io_stringhandle_write_b(PARROT_INTERP,
 #define ASSERT_ARGS_io_stringhandle_adv_position __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
        PARROT_ASSERT_ARG(interp) \
     , PARROT_ASSERT_ARG(handle))
+#define ASSERT_ARGS_io_stringhandle_apply_flag __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
+       PARROT_ASSERT_ARG(interp) \
+    , PARROT_ASSERT_ARG(handle))
 #define ASSERT_ARGS_io_stringhandle_close __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
        PARROT_ASSERT_ARG(interp) \
     , PARROT_ASSERT_ARG(handle))
@@ -149,16 +149,10 @@ static INTVAL io_stringhandle_write_b(PARROT_INTERP,
 #define ASSERT_ARGS_io_stringhandle_get_encoding __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
        PARROT_ASSERT_ARG(interp) \
     , PARROT_ASSERT_ARG(handle))
-#define ASSERT_ARGS_io_stringhandle_get_flags __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
-       PARROT_ASSERT_ARG(interp) \
-    , PARROT_ASSERT_ARG(handle))
 #define ASSERT_ARGS_io_stringhandle_get_piohandle __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
        PARROT_ASSERT_ARG(interp) \
     , PARROT_ASSERT_ARG(handle))
 #define ASSERT_ARGS_io_stringhandle_get_position __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
-       PARROT_ASSERT_ARG(interp) \
-    , PARROT_ASSERT_ARG(handle))
-#define ASSERT_ARGS_io_stringhandle_is_eof __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
        PARROT_ASSERT_ARG(interp) \
     , PARROT_ASSERT_ARG(handle))
 #define ASSERT_ARGS_io_stringhandle_is_open __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
@@ -173,10 +167,10 @@ static INTVAL io_stringhandle_write_b(PARROT_INTERP,
        PARROT_ASSERT_ARG(interp) \
     , PARROT_ASSERT_ARG(handle) \
     , PARROT_ASSERT_ARG(buffer))
-#define ASSERT_ARGS_io_stringhandle_seek __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
+#define ASSERT_ARGS_io_stringhandle_remove_flag __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
        PARROT_ASSERT_ARG(interp) \
     , PARROT_ASSERT_ARG(handle))
-#define ASSERT_ARGS_io_stringhandle_set_flags __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
+#define ASSERT_ARGS_io_stringhandle_seek __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
        PARROT_ASSERT_ARG(interp) \
     , PARROT_ASSERT_ARG(handle))
 #define ASSERT_ARGS_io_stringhandle_set_position __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
@@ -227,7 +221,6 @@ io_stringhandle_setup_vtable(PARROT_INTERP, ARGMOD_NULLOK(IO_VTABLE *vtable), IN
     vtable->read_b = io_stringhandle_read_b;
     vtable->write_b = io_stringhandle_write_b;
     vtable->flush = io_stringhandle_flush;
-    vtable->is_eof = io_stringhandle_is_eof;
     vtable->tell = io_stringhandle_tell;
     vtable->seek = io_stringhandle_seek;
     vtable->adv_position = io_stringhandle_adv_position;
@@ -237,8 +230,8 @@ io_stringhandle_setup_vtable(PARROT_INTERP, ARGMOD_NULLOK(IO_VTABLE *vtable), IN
     vtable->is_open = io_stringhandle_is_open;
     vtable->close = io_stringhandle_close;
     vtable->get_encoding = io_stringhandle_get_encoding;
-    vtable->set_flags = io_stringhandle_set_flags;
-    vtable->get_flags = io_stringhandle_get_flags;
+    vtable->apply_flag = io_stringhandle_apply_flag;
+    vtable->remove_flag = io_stringhandle_remove_flag;
     vtable->total_size = io_stringhandle_total_size;
     vtable->get_piohandle = io_stringhandle_get_piohandle;
 }
@@ -264,6 +257,12 @@ io_stringhandle_read_b(PARROT_INTERP, ARGMOD(PMC *handle), ARGOUT(char *buffer),
     GETATTR_StringHandle_read_offset(interp, handle, read_offs);
     GETATTR_StringHandle_stringhandle(interp, handle, stringhandle);
     available_bytes = stringhandle->bufused - read_offs;
+
+    if (available_bytes == 0) {
+        PARROT_STRINGHANDLE(handle)->flags |= PIO_F_EOF;
+        return 0;
+    }
+
     if (byte_length > available_bytes)
         byte_length = available_bytes;
 
@@ -323,28 +322,6 @@ io_stringhandle_flush(PARROT_INTERP, ARGMOD(PMC *handle))
 
 /*
 
-=item C<static INTVAL io_stringhandle_is_eof(PARROT_INTERP, PMC *handle)>
-
-The StringHandle is at eof if the current read cursor is passed the end of the
-string contents.
-
-=cut
-
-*/
-
-static INTVAL
-io_stringhandle_is_eof(PARROT_INTERP, ARGMOD(PMC *handle))
-{
-    ASSERT_ARGS(io_stringhandle_is_eof)
-    INTVAL read_offs;
-    STRING *stringhandle;
-    GETATTR_StringHandle_read_offset(interp, handle, read_offs);
-    GETATTR_StringHandle_stringhandle(interp, handle, stringhandle);
-    return (UINTVAL)read_offs >= stringhandle->bufused;
-}
-
-/*
-
 =item C<static PIOOFF_T io_stringhandle_tell(PARROT_INTERP, PMC *handle)>
 
 Get the current position of the cursor in the string.
@@ -380,7 +357,10 @@ io_stringhandle_seek(PARROT_INTERP, ARGMOD(PMC *handle), PIOOFF_T offset, INTVAL
     INTVAL old_offs;
     STRING *stringhandle;
     INTVAL read_offs = 0;
+    Parrot_StringHandle_attributes * const attrs = PARROT_STRINGHANDLE(handle);
+
     /* TODO: Need more error checking */
+    /* XXX: Bounds checking missing?! */
     switch (whence) {
         case SEEK_SET:
             /* Absolute seek, start from the beginning of the string */
@@ -401,6 +381,7 @@ io_stringhandle_seek(PARROT_INTERP, ARGMOD(PMC *handle), PIOOFF_T offset, INTVAL
                 "Cannot seek with mode %d", whence);
     }
     SETATTR_StringHandle_read_offset(interp, handle, read_offs);
+    attrs->flags &= ~PIO_F_EOF;
     return (PIOOFF_T)read_offs;
 }
 
@@ -562,31 +543,34 @@ io_stringhandle_get_piohandle(PARROT_INTERP, ARGIN(PMC *handle))
 
 /*
 
-=item C<static void io_stringhandle_set_flags(PARROT_INTERP, PMC *handle, INTVAL
-flags)>
+=item C<static void io_stringhandle_apply_flag(PARROT_INTERP, PMC *handle,
+INTVAL flag)>
 
-Set the flags on the StringHandle.
+Unconditionally accepts all flags, but does nothing.
 
-=item C<static INTVAL io_stringhandle_get_flags(PARROT_INTERP, PMC *handle)>
+=item C<static INTVAL io_stringhandle_remove_flag(PARROT_INTERP, PMC *handle,
+INTVAL flag)>
 
-Get the flags from the StringHandle.
+Unconditionally accepts all flags, but does nothing.
 
 =cut
 
 */
 
 static void
-io_stringhandle_set_flags(PARROT_INTERP, ARGIN(PMC *handle), INTVAL flags)
+io_stringhandle_apply_flag(PARROT_INTERP, ARGIN(PMC *handle), INTVAL flag)
 {
-    ASSERT_ARGS(io_stringhandle_set_flags)
-    PARROT_STRINGHANDLE(handle)->flags = flags;
+    ASSERT_ARGS(io_stringhandle_apply_flag)
+    UNUSED(flag);
+    return 1;
 }
 
 static INTVAL
-io_stringhandle_get_flags(PARROT_INTERP, ARGIN(PMC *handle))
+io_stringhandle_remove_flag(PARROT_INTERP, ARGIN(PMC *handle), INTVAL flag)
 {
-    ASSERT_ARGS(io_stringhandle_get_flags)
-    return PARROT_STRINGHANDLE(handle)->flags;
+    ASSERT_ARGS(io_stringhandle_remove_flag)
+    UNUSED(flag);
+    return 1;
 }
 
 /*

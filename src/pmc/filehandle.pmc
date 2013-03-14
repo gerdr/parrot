@@ -36,7 +36,6 @@ extern "C" {
 /* HEADERIZER END: static */
 
 pmclass FileHandle extends Handle auto_attrs {
-    ATTR INTVAL flags;                /* Filehandle flags             */
     ATTR STRING *filename;            /* The opened path and filename */
     ATTR STRING *mode;                /* The mode string used in open */
     ATTR INTVAL process_id;           /* Child process on pipes       */
@@ -170,52 +169,6 @@ Free structures.
 
 /*
 
-=item C<INTVAL get_integer_keyed_int(INTVAL key)>
-
-Shortcut to get the value of some attributes.
-For internal usage only, subject to change without notice.
-
-=cut
-
-*/
-
-    VTABLE INTVAL get_integer_keyed_int(INTVAL key) {
-        INTVAL result;
-        switch (key) {
-          case 0:
-            GET_ATTR_process_id(INTERP, SELF, result);
-            break;
-          default:
-            result = 0;
-        }
-
-        return result;
-    }
-
-
-/*
-
-=item C<void set_integer_keyed_int(INTVAL key, INTVAL value)>
-
-Shortcut to set the value of some attributes
-For internal usage only, subject to change without notice.
-
-=cut
-
-*/
-
-    VTABLE void set_integer_keyed_int(INTVAL key, INTVAL value) {
-        switch (key) {
-          case 0:
-            SET_ATTR_process_id(INTERP, SELF, value);
-            break;
-          default:
-            break;
-        }
-    }
-
-/*
-
 =back
 
 =head2 Methods
@@ -275,21 +228,6 @@ EXCEPTION_INVALID_OPERATION with:
         RETURN(PMC *filehandle);
     }
 
-
-/*
-
-=item C<METHOD isatty()>
-
-Returns a boolean value indicating whether C<SELF> is a console/tty.
-
-=cut
-
-*/
-
-    METHOD isatty() {
-        const INTVAL isatty = Parrot_io_is_tty_handle(INTERP, SELF);
-        RETURN(INTVAL isatty);
-    }
 
 /*
 

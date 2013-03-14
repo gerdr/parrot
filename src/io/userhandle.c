@@ -52,11 +52,6 @@ static PIOHANDLE io_userhandle_get_piohandle(PARROT_INTERP,
         __attribute__nonnull__(1)
         __attribute__nonnull__(2);
 
-static INTVAL io_userhandle_is_eof(PARROT_INTERP, ARGMOD(PMC *handle))
-        __attribute__nonnull__(1)
-        __attribute__nonnull__(2)
-        FUNC_MODIFIES(*handle);
-
 static INTVAL io_userhandle_is_open(PARROT_INTERP, ARGMOD(PMC *handle))
         __attribute__nonnull__(1)
         __attribute__nonnull__(2)
@@ -130,9 +125,6 @@ static INTVAL io_userhandle_write_b(PARROT_INTERP,
 #define ASSERT_ARGS_io_userhandle_get_piohandle __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
        PARROT_ASSERT_ARG(interp) \
     , PARROT_ASSERT_ARG(handle))
-#define ASSERT_ARGS_io_userhandle_is_eof __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
-       PARROT_ASSERT_ARG(interp) \
-    , PARROT_ASSERT_ARG(handle))
 #define ASSERT_ARGS_io_userhandle_is_open __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
        PARROT_ASSERT_ARG(interp) \
     , PARROT_ASSERT_ARG(handle))
@@ -187,15 +179,14 @@ io_userhandle_setup_vtable(PARROT_INTERP, ARGMOD_NULLOK(IO_VTABLE *vtable), INTV
     vtable->read_b = io_userhandle_read_b;
     vtable->write_b = io_userhandle_write_b;
     vtable->flush = io_userhandle_flush;
-    vtable->is_eof = io_userhandle_is_eof;
     vtable->tell = io_userhandle_tell;
     vtable->seek = io_userhandle_seek;
     vtable->open = io_userhandle_open;
     vtable->is_open = io_userhandle_is_open;
     vtable->close = io_userhandle_close;
     vtable->get_encoding = io_userhandle_get_encoding;
-    vtable->set_flags = io_userhandle_set_flags;
-    vtable->get_flags = io_userhandle_get_flags;
+    vtable->apply_flag = io_userhandle_apply_flag;
+    vtable->remove_flag = io_userhandle_remove_flag;
     vtable->total_size = io_userhandle_total_size;
     vtable->get_piohandle = io_userhandle_get_piohandle;
     */

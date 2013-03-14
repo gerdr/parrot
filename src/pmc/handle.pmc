@@ -33,12 +33,13 @@ EXCEPTION_INVALID_OPERATION.
 
 pmclass Handle provides Handle manual_attrs {
     /* TODO: Consider encapsulating PIOHANDLE as a PMC type, for subclassing */
-    ATTR PIOHANDLE os_handle;           /* Low level OS descriptor */
+    ATTR PIOHANDLE  os_handle;          /* Low level OS descriptor */
+    ATTR INTVAL     flags;              /* Handle flags */
     ATTR STRING    *record_separator;   /* Record separator */
     ATTR IO_VTABLE *io_vtable;          /* Function dispatch table */
     ATTR IO_BUFFER *read_buffer;        /* Read Buffer */
     ATTR IO_BUFFER *write_buffer;       /* Write Buffer */
-    ATTR STRING *encoding;              /* The encoding for read/write  */
+    ATTR STRING    *encoding;           /* The encoding for read/write  */
 
 
     VTABLE void init() {
@@ -92,6 +93,32 @@ pmclass Handle provides Handle manual_attrs {
         }
     }
 
+    VTABLE INTVAL get_integer_keyed_int(INTVAL key)
+    {
+        INTVAL value;
+        switch (key) {
+            case IO_INT_IDX_FLAGS:
+                GET_ATTR_flags(INTERP, SELF, value);
+                break;
+            default:
+                Parrot_ex_throw_from_c_args(INTERP, NULL, EXCEPTION_PIO_ERROR,
+                    "Handle: Cannot get integer %d", key);
+        }
+        return value;
+    }
+
+    VTABLE void set_integer_keyed_int(INTVAL key, INTVAL value)
+    {
+        switch (key) {
+            case IO_INT_IDX_FLAGS:
+                SET_ATTR_flags(INTERP, SELF, value);
+                break;
+            default:
+                Parrot_ex_throw_from_c_args(INTERP, NULL, EXCEPTION_PIO_ERROR,
+                    "Handle: Cannot set pointer %d", key);
+        }
+    }
+
 /*
 
 =item C<INTVAL get_bool()>
@@ -119,15 +146,14 @@ Returns whether the Handle is currently open.
 =item C<METHOD isatty()>
 
 Returns a boolean value indicating whether C<SELF> is a console/tty.
-This default implementation always return false. Override it in
-subtypes that are or can be tty.
 
 =cut
 
 */
 
     METHOD isatty() {
-        RETURN(INTVAL 0);
+        const INTVAL isatty = Parrot_io_is_tty_handle(INTERP, SELF);
+        RETURN(INTVAL isatty);
     }
 
 /*
@@ -146,6 +172,20 @@ in the stream.
     METHOD eof() {
         const INTVAL status = Parrot_io_eof(INTERP, SELF);
         RETURN(INTVAL status);
+    }
+
+/*
+
+=item C<METHOD clear_eof()>
+
+Clear the end-of-file indicator.
+
+=cut
+
+*/
+
+    METHOD clear_eof() {
+        Parrot_io_clear_eof(INTERP, SELF);
     }
 
 /*

@@ -367,29 +367,9 @@ C<socket> is null, create a new Socket PMC (or whatever is mapped to it).
 Use the given C<fam>, C<type> and C<proto> values to configure the new socket.
 Returns the C<socket>.
 
-=item C<INTVAL Parrot_io_socket_handle(PARROT_INTERP, PMC *socket, INTVAL fam,
-INTVAL type, INTVAL proto)>
-
-Legacy wrapper function for Parrot_io_socket. This is deprecated, do not use.
-
 =cut
 
 */
-
-PARROT_EXPORT
-PARROT_WARN_UNUSED_RESULT
-PARROT_CANNOT_RETURN_NULL
-INTVAL
-Parrot_io_socket_handle(PARROT_INTERP, ARGMOD_NULLOK(PMC *socket), INTVAL fam,
-            INTVAL type, INTVAL proto)
-{
-    ASSERT_ARGS(Parrot_io_socket_handle)
-    PMC * const dummy = Parrot_io_socket(interp, socket, fam, type, proto);
-    UNUSED(dummy);
-    /* For historical reasons, this function always returns 0 to signal
-       unconditional success */
-    return 0;
-}
 
 PARROT_EXPORT
 PARROT_WARN_UNUSED_RESULT
@@ -488,31 +468,11 @@ Parrot_io_fdopen_flags(PARROT_INTERP, ARGMOD(PMC *filehandle), PIOHANDLE fd,
         if (vtable->number != IO_VTABLE_FILEHANDLE && vtable->number != IO_VTABLE_PIPE)
             Parrot_ex_throw_from_c_args(interp, NULL, EXCEPTION_PIO_ERROR,
                     "Cannot set an OS file descriptor to a %s PMC", vtable->name);
-        vtable->set_flags(interp, filehandle, flags);
+        IO_SET_FLAGS(interp, filehandle, flags);
         io_filehandle_set_os_handle(interp, filehandle, fd);
     }
 
     return filehandle;
-}
-
-/*
-
-=item C<void Parrot_io_socket_initialize(PARROT_INTERP, PMC *socket)>
-
-Initialize a Socket PMC by clearing it's C<os_handle> and marking it as being
-disconnected (closed).
-
-=cut
-
-*/
-
-PARROT_EXPORT
-void
-Parrot_io_socket_initialize(SHIM_INTERP, ARGMOD(PMC *socket))
-{
-    ASSERT_ARGS(Parrot_io_socket_initialize)
-    /* TODO: Move this logic into src/io/socket.c */
-    PARROT_SOCKET(socket)->os_handle = (PIOHANDLE)PIO_INVALID_HANDLE;
 }
 
 /*
@@ -951,7 +911,6 @@ Parrot_io_readline_s(PARROT_INTERP, ARGMOD(PMC *handle), ARGIN(STRING * terminat
         const IO_VTABLE * const vtable = IO_GET_VTABLE(interp, handle);
         IO_BUFFER * read_buffer = IO_GET_READ_BUFFER(interp, handle);
         IO_BUFFER * const write_buffer = IO_GET_WRITE_BUFFER(interp, handle);
-        INTVAL flags = Parrot_io_get_flags(interp, handle);
         size_t bytes_read;
         STRING *result;
         size_t max_delimiter_byte_size = 0;
@@ -1253,22 +1212,38 @@ INTVAL
 Parrot_io_eof(PARROT_INTERP, ARGMOD(PMC *handle))
 {
     ASSERT_ARGS(Parrot_io_eof)
-    INTVAL flags, result;
 
     /* io could be null here, but rather than return a negative error
      * we just fake EOF since eof test is usually in a boolean context.
      */
-    if (PMC_IS_NULL(handle))
+    if (PMC_IS_NULL(handle) || Parrot_io_is_closed(interp, handle))
         return 1;
-    if (Parrot_io_is_closed(interp, handle))
-        return 1;
+
     {
         IO_BUFFER * const buffer = IO_GET_READ_BUFFER(interp, handle);
-        const IO_VTABLE * const vtable = IO_GET_VTABLE(interp, handle);
-        if (buffer)
-            return BUFFER_IS_EMPTY(buffer) && vtable->is_eof(interp, handle);
-        return vtable->is_eof(interp, handle);
+        if (buffer && !BUFFER_IS_EMPTY(buffer))
+            return 0;
+
+        return IO_IS_EOF(interp, handle);
     }
+}
+
+/*
+
+=item C<void Parrot_io_clear_eof(PARROT_INTERP, PMC *handle)>
+
+Clears the end-of-file indicator.
+
+=cut
+
+*/
+
+PARROT_EXPORT
+void
+Parrot_io_clear_eof(PARROT_INTERP, ARGIN(PMC *handle))
+{
+    ASSERT_ARGS(Parrot_io_clear_eof)
+    Parrot_io_clear_flag(interp, handle, PIO_F_EOF);
 }
 
 /*
@@ -1478,7 +1453,7 @@ Parrot_io_is_tty_handle(PARROT_INTERP, ARGIN(PMC *pmc))
     if (Parrot_io_is_closed(interp, pmc))
         return 0;
 
-    return (Parrot_io_get_flags(interp, pmc) & PIO_F_CONSOLE) ? 1 : 0;
+    return (IO_GET_FLAGS(interp, pmc) & PIO_F_CONSOLE) != 0;
 }
 
 /*
@@ -1500,8 +1475,7 @@ Parrot_io_is_async(PARROT_INTERP, ARGMOD(PMC *pmc))
     if (Parrot_io_is_closed(interp, pmc))
         return 0;
 
-/* return (Parrot_io_get_flags(interp, pmc) & PIO_F_ASYNC) ? 1 : 0; */
-    return 0;
+    return (IO_GET_FLAGS(interp, pmc) & PIO_F_ASYNC) != 0;
 }
 
 /*
@@ -1698,7 +1672,7 @@ Parrot_io_poll(PARROT_INTERP, ARGMOD(PMC *pmc), INTVAL which, INTVAL sec, INTVAL
     ASSERT_ARGS(Parrot_io_poll)
     /* TODO: Can we move this to the IO_VTABLE and make it usable for all
        types? */
-    Parrot_Socket_attributes *io = PARROT_SOCKET(pmc);
+    Parrot_Socket_attributes *const io = PARROT_SOCKET(pmc);
 
     if (Parrot_io_is_closed(interp, pmc))
         Parrot_ex_throw_from_c_args(interp, NULL, EXCEPTION_PIO_ERROR,
@@ -1912,48 +1886,51 @@ Parrot_io_socket_new(PARROT_INTERP, INTVAL flags)
 {
     ASSERT_ARGS(Parrot_io_socket_new)
     PMC * const sock = io_get_new_socket(interp);
-    Parrot_io_set_flags(interp, sock, flags);
     return sock;
 }
 
 /*
 
-=item C<INTVAL Parrot_io_get_flags(PARROT_INTERP, PMC *handle)>
+=item C<void Parrot_io_raise_flag(PARROT_INTERP, PMC *handle, INTVAL flag)>
 
-Gets the current handle flags.
+Raises a handle flags.
 
-=item C<void Parrot_io_set_flags(PARROT_INTERP, PMC *handle, INTVAL flags)>
+=item C<void Parrot_io_clear_flag(PARROT_INTERP, PMC *handle, INTVAL flag)>
 
-Sets the current handle flags.
+Clears a handle flags.
 
 =cut
 
 */
 
-PARROT_WARN_UNUSED_RESULT
-INTVAL
-Parrot_io_get_flags(PARROT_INTERP, ARGIN(PMC *handle))
+void
+Parrot_io_raise_flag(PARROT_INTERP, ARGIN(PMC *handle), INTVAL flag)
 {
-    ASSERT_ARGS(Parrot_io_get_flags)
+    ASSERT_ARGS(Parrot_io_raise_flag)
     if (PMC_IS_NULL(handle))
         Parrot_ex_throw_from_c_args(interp, NULL, EXCEPTION_PIO_ERROR,
-            "Cannot get flags for null or invalid PMC");
+            "Cannot raise flag on null or invalid PMC");
     {
         const IO_VTABLE * const vtable = IO_GET_VTABLE(interp, handle);
-        return vtable->get_flags(interp, handle);
+        if (vtable->apply_flag(interp, handle, flag))
+            VTABLE_set_integer_keyed_int(interp, handle, IO_INT_IDX_FLAGS,
+                                         IO_GET_FLAGS(interp, handle) | flag);
     }
 }
 
 void
-Parrot_io_set_flags(PARROT_INTERP, ARGIN(PMC *handle), INTVAL flags)
+Parrot_io_clear_flag(PARROT_INTERP, ARGIN(PMC *handle), INTVAL flag)
 {
-    ASSERT_ARGS(Parrot_io_set_flags)
+    ASSERT_ARGS(Parrot_io_clear_flag)
     if (PMC_IS_NULL(handle))
         Parrot_ex_throw_from_c_args(interp, NULL, EXCEPTION_PIO_ERROR,
-            "Cannot set flags for null or invalid PMC");
+            "Cannot clear flag on null or invalid PMC");
     {
         const IO_VTABLE * const vtable = IO_GET_VTABLE(interp, handle);
-        vtable->set_flags(interp, handle, flags);
+        if (vtable->remove_flag(interp, handle, flag)) {
+            VTABLE_set_integer_keyed_int(interp, handle, IO_INT_IDX_FLAGS,
+                                         IO_GET_FLAGS(interp, handle) & ~flag);
+        }
     }
 }
 

@@ -185,7 +185,7 @@ io_verify_is_open_for(PARROT_INTERP, ARGIN(PMC *handle),
     if (Parrot_io_is_closed(interp, handle))
         Parrot_ex_throw_from_c_args(interp, NULL, EXCEPTION_PIO_ERROR,
                 "IO PMC %s is not open", vtable->name);
-    if ((vtable->get_flags(interp, handle) & flags) == 0)
+    if ((IO_GET_FLAGS(interp, handle) & flags) == 0)
         Parrot_ex_throw_from_c_args(interp, NULL, EXCEPTION_PIO_ERROR,
                 "IO PMC %s is not in mode %d", vtable->name, flags);
 }
@@ -443,12 +443,9 @@ io_readline_encoded_string(PARROT_INTERP, ARGMOD(PMC *handle),
                 break;
         }
 
-        /* XXX: Should we discard any partial characters so vtable->is_eof()
-                and Parrot_io_eof() (and thus the PMC method) will agree?
-
-                Imo keeping the partial characters is the right thing to do.
-        */
-        if (vtable->is_eof(interp, handle))
+        /* XXX: We don't discard partial characters here, so Parrot_io_eof() 
+                will possibly still yield false */
+        if (IO_IS_EOF(interp, handle))
             break;
 
         /* We haven't found the terminator yet, so get new input and try again */

@@ -784,6 +784,10 @@ The list may also be augmented if additional functionality is required.
 
 =item C<Parrot_io_bind>
 
+=item C<Parrot_io_clear_eof>
+
+=item C<Parrot_io_clear_flag>
+
 =item C<Parrot_io_close>
 
 =item C<Parrot_io_close_filehandle>
@@ -820,8 +824,6 @@ The list may also be augmented if additional functionality is required.
 
 =item C<Parrot_io_get_file_size>
 
-=item C<Parrot_io_get_flags>
-
 =item C<Parrot_io_get_os_handle>
 
 =item C<Parrot_io_init>
@@ -856,6 +858,8 @@ The list may also be augmented if additional functionality is required.
 
 =item C<Parrot_io_puts>
 
+=item C<Parrot_io_raise_flag>
+
 =item C<Parrot_io_readline>
 
 =item C<Parrot_io_reads>
@@ -869,8 +873,6 @@ The list may also be augmented if additional functionality is required.
 =item C<Parrot_io_set_file_position>
 
 =item C<Parrot_io_set_file_size>
-
-=item C<Parrot_io_set_flags>
 
 =item C<Parrot_io_set_os_handle>
 

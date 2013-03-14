@@ -37,6 +37,12 @@ static void io_filehandle_adv_position(PARROT_INTERP,
         __attribute__nonnull__(2)
         FUNC_MODIFIES(*handle);
 
+static void io_filehandle_apply_flag(PARROT_INTERP,
+    ARGIN(PMC *handle),
+    INTVAL flag)
+        __attribute__nonnull__(1)
+        __attribute__nonnull__(2);
+
 static INTVAL io_filehandle_close(PARROT_INTERP, ARGMOD(PMC *handle))
         __attribute__nonnull__(1)
         __attribute__nonnull__(2)
@@ -54,10 +60,6 @@ static const STR_VTABLE * io_filehandle_get_encoding(PARROT_INTERP,
         __attribute__nonnull__(1)
         __attribute__nonnull__(2);
 
-static INTVAL io_filehandle_get_flags(PARROT_INTERP, ARGIN(PMC *handle))
-        __attribute__nonnull__(1)
-        __attribute__nonnull__(2);
-
 static PIOHANDLE io_filehandle_get_piohandle(PARROT_INTERP,
     ARGIN(PMC *handle))
         __attribute__nonnull__(1)
@@ -65,11 +67,6 @@ static PIOHANDLE io_filehandle_get_piohandle(PARROT_INTERP,
 
 static PIOOFF_T io_filehandle_get_position(PARROT_INTERP,
     ARGMOD(PMC *handle))
-        __attribute__nonnull__(1)
-        __attribute__nonnull__(2)
-        FUNC_MODIFIES(*handle);
-
-static INTVAL io_filehandle_is_eof(PARROT_INTERP, ARGMOD(PMC *handle))
         __attribute__nonnull__(1)
         __attribute__nonnull__(2)
         FUNC_MODIFIES(*handle);
@@ -100,6 +97,12 @@ static INTVAL io_filehandle_read_b(PARROT_INTERP,
         FUNC_MODIFIES(*handle)
         FUNC_MODIFIES(*buffer);
 
+static INTVAL io_filehandle_remove_flag(PARROT_INTERP,
+    ARGIN(PMC *handle),
+    INTVAL flag)
+        __attribute__nonnull__(1)
+        __attribute__nonnull__(2);
+
 static PIOOFF_T io_filehandle_seek(PARROT_INTERP,
     ARGMOD(PMC *handle),
     PIOOFF_T offset,
@@ -107,12 +110,6 @@ static PIOOFF_T io_filehandle_seek(PARROT_INTERP,
         __attribute__nonnull__(1)
         __attribute__nonnull__(2)
         FUNC_MODIFIES(*handle);
-
-static void io_filehandle_set_flags(PARROT_INTERP,
-    ARGIN(PMC *handle),
-    INTVAL flags)
-        __attribute__nonnull__(1)
-        __attribute__nonnull__(2);
 
 static void io_filehandle_set_position(PARROT_INTERP,
     ARGMOD(PMC *handle),
@@ -142,6 +139,9 @@ static INTVAL io_filehandle_write_b(PARROT_INTERP,
 #define ASSERT_ARGS_io_filehandle_adv_position __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
        PARROT_ASSERT_ARG(interp) \
     , PARROT_ASSERT_ARG(handle))
+#define ASSERT_ARGS_io_filehandle_apply_flag __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
+       PARROT_ASSERT_ARG(interp) \
+    , PARROT_ASSERT_ARG(handle))
 #define ASSERT_ARGS_io_filehandle_close __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
        PARROT_ASSERT_ARG(interp) \
     , PARROT_ASSERT_ARG(handle))
@@ -151,16 +151,10 @@ static INTVAL io_filehandle_write_b(PARROT_INTERP,
 #define ASSERT_ARGS_io_filehandle_get_encoding __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
        PARROT_ASSERT_ARG(interp) \
     , PARROT_ASSERT_ARG(handle))
-#define ASSERT_ARGS_io_filehandle_get_flags __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
-       PARROT_ASSERT_ARG(interp) \
-    , PARROT_ASSERT_ARG(handle))
 #define ASSERT_ARGS_io_filehandle_get_piohandle __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
        PARROT_ASSERT_ARG(interp) \
     , PARROT_ASSERT_ARG(handle))
 #define ASSERT_ARGS_io_filehandle_get_position __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
-       PARROT_ASSERT_ARG(interp) \
-    , PARROT_ASSERT_ARG(handle))
-#define ASSERT_ARGS_io_filehandle_is_eof __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
        PARROT_ASSERT_ARG(interp) \
     , PARROT_ASSERT_ARG(handle))
 #define ASSERT_ARGS_io_filehandle_is_open __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
@@ -175,10 +169,10 @@ static INTVAL io_filehandle_write_b(PARROT_INTERP,
        PARROT_ASSERT_ARG(interp) \
     , PARROT_ASSERT_ARG(handle) \
     , PARROT_ASSERT_ARG(buffer))
-#define ASSERT_ARGS_io_filehandle_seek __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
+#define ASSERT_ARGS_io_filehandle_remove_flag __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
        PARROT_ASSERT_ARG(interp) \
     , PARROT_ASSERT_ARG(handle))
-#define ASSERT_ARGS_io_filehandle_set_flags __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
+#define ASSERT_ARGS_io_filehandle_seek __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
        PARROT_ASSERT_ARG(interp) \
     , PARROT_ASSERT_ARG(handle))
 #define ASSERT_ARGS_io_filehandle_set_position __attribute__unused__ int _ASSERT_ARGS_CHECK = (\
@@ -224,7 +218,6 @@ io_filehandle_setup_vtable(PARROT_INTERP, ARGMOD_NULLOK(IO_VTABLE *vtable), INTV
     vtable->read_b = io_filehandle_read_b;
     vtable->write_b = io_filehandle_write_b;
     vtable->flush = io_filehandle_flush;
-    vtable->is_eof = io_filehandle_is_eof;
     vtable->tell = io_filehandle_tell;
     vtable->seek = io_filehandle_seek;
     vtable->adv_position = io_filehandle_adv_position;
@@ -234,8 +227,8 @@ io_filehandle_setup_vtable(PARROT_INTERP, ARGMOD_NULLOK(IO_VTABLE *vtable), INTV
     vtable->is_open = io_filehandle_is_open;
     vtable->close = io_filehandle_close;
     vtable->get_encoding = io_filehandle_get_encoding;
-    vtable->set_flags = io_filehandle_set_flags;
-    vtable->get_flags = io_filehandle_get_flags;
+    vtable->apply_flag = io_filehandle_apply_flag;
+    vtable->remove_flag = io_filehandle_remove_flag;
     vtable->total_size = io_filehandle_total_size;
     vtable->get_piohandle = io_filehandle_get_piohandle;
 }
@@ -258,12 +251,8 @@ io_filehandle_read_b(PARROT_INTERP, ARGMOD(PMC *handle), ARGOUT(char *buffer), s
     ASSERT_ARGS(io_filehandle_read_b)
     const PIOHANDLE os_handle = io_filehandle_get_os_handle(interp, handle);
     const size_t bytes_read = Parrot_io_internal_read(interp, os_handle, buffer, byte_length);
-    if (bytes_read == 0) {
-        INTVAL flags;
-        GETATTR_FileHandle_flags(interp, handle, flags);
-        flags |= PIO_F_EOF;
-        SETATTR_FileHandle_flags(interp, handle, flags);
-    }
+    if (bytes_read == 0)
+        PARROT_FILEHANDLE(handle)->flags |= PIO_F_EOF;
     return bytes_read;
 }
 
@@ -304,27 +293,6 @@ io_filehandle_flush(PARROT_INTERP, ARGMOD(PMC *handle))
     /* TODO: In read mode, don't do what this does. */
     PIOHANDLE os_handle = io_filehandle_get_os_handle(interp, handle);
     return Parrot_io_internal_flush(interp, os_handle);
-}
-
-/*
-
-=item C<static INTVAL io_filehandle_is_eof(PARROT_INTERP, PMC *handle)>
-
-Determine if this handle as at end-of-file.
-
-=cut
-
-*/
-
-static INTVAL
-io_filehandle_is_eof(PARROT_INTERP, ARGMOD(PMC *handle))
-{
-    ASSERT_ARGS(io_filehandle_is_eof)
-    INTVAL flags;
-    GETATTR_FileHandle_flags(interp, handle, flags);
-    if (flags & PIO_F_EOF)
-        return 1;
-    return 0;
 }
 
 /*
@@ -404,16 +372,14 @@ static void
 io_filehandle_set_position(PARROT_INTERP, ARGMOD(PMC *handle), PIOOFF_T pos)
 {
     ASSERT_ARGS(io_filehandle_set_position)
-    Parrot_FileHandle_attributes * const attrs = PARROT_FILEHANDLE(handle);
-    attrs->file_pos = pos;
+    PARROT_FILEHANDLE(handle)->file_pos = pos;
 }
 
 static PIOOFF_T
 io_filehandle_get_position(PARROT_INTERP, ARGMOD(PMC *handle))
 {
     ASSERT_ARGS(io_filehandle_get_position)
-    Parrot_FileHandle_attributes * const attrs = PARROT_FILEHANDLE(handle);
-    return attrs->file_pos;
+    return PARROT_FILEHANDLE(handle)->file_pos;
 }
 
 /*
@@ -520,7 +486,7 @@ io_filehandle_close(PARROT_INTERP, ARGMOD(PMC *handle))
     else {
         INTVAL result = Parrot_io_internal_close(interp, os_handle);
         io_filehandle_set_os_handle(interp, handle, PIO_INVALID_HANDLE);
-        io_filehandle_set_flags(interp, handle, 0);
+        SETATTR_FileHandle_flags(interp, handle, 0);
         return result;
     }
 }
@@ -552,31 +518,34 @@ io_filehandle_get_encoding(PARROT_INTERP, ARGIN(PMC *handle))
 
 /*
 
-=item C<static void io_filehandle_set_flags(PARROT_INTERP, PMC *handle, INTVAL
-flags)>
+=item C<static void io_filehandle_apply_flag(PARROT_INTERP, PMC *handle, INTVAL
+flag)>
 
-Set the mode flags on the FileHandle.
+Unconditionally accepts all flags, but does nothing.
 
-=item C<static INTVAL io_filehandle_get_flags(PARROT_INTERP, PMC *handle)>
+=item C<static INTVAL io_filehandle_remove_flag(PARROT_INTERP, PMC *handle,
+INTVAL flag)>
 
-Get the mode flags from the FileHandle.
+Unconditionally accepts all flags, but does nothing.
 
 =cut
 
 */
 
 static void
-io_filehandle_set_flags(PARROT_INTERP, ARGIN(PMC *handle), INTVAL flags)
+io_filehandle_apply_flag(PARROT_INTERP, ARGIN(PMC *handle), INTVAL flag)
 {
-    ASSERT_ARGS(io_filehandle_set_flags)
-    PARROT_FILEHANDLE(handle)->flags = flags;
+    ASSERT_ARGS(io_filehandle_apply_flag)
+    UNUSED(flag);
+    return 1;
 }
 
 static INTVAL
-io_filehandle_get_flags(PARROT_INTERP, ARGIN(PMC *handle))
+io_filehandle_remove_flag(PARROT_INTERP, ARGIN(PMC *handle), INTVAL flag)
 {
-    ASSERT_ARGS(io_filehandle_get_flags)
-    return PARROT_FILEHANDLE(handle)->flags;
+    ASSERT_ARGS(io_filehandle_remove_flag)
+    UNUSED(flag);
+    return 1;
 }
 
 /*

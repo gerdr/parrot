@@ -47,6 +47,7 @@ Initializes a newly created Socket object.
         Parrot_Socket_attributes * const data_struct =
                 (Parrot_Socket_attributes *) PMC_data(SELF);
 
+        data_struct->os_handle = (PIOHANDLE)PIO_INVALID_HANDLE;
         data_struct->record_separator = CONST_STRING(interp, "\n");
         data_struct->local            = PMCNULL;
         data_struct->remote           = PMCNULL;
@@ -55,7 +56,8 @@ Initializes a newly created Socket object.
         data_struct->write_buffer     = NULL;
         data_struct->encoding         = STRINGNULL;
 
-        Parrot_io_socket_initialize(INTERP, SELF);
+        /* XXX: Assume all sockets r/w only for now */
+        data_struct->flags = PIO_F_READ | PIO_F_WRITE;
 
         PObj_custom_mark_destroy_SETALL(SELF);
     }

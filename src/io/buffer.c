@@ -306,13 +306,8 @@ Parrot_io_buffer_read_b(PARROT_INTERP, ARGMOD_NULLOK(IO_BUFFER *buffer),
 
         /* If we still need more data than the buffer can hold, just read it
            directly. */
-        if (length > buffer->buffer_size) {
-            const size_t count = vtable->read_b(interp, handle, s + bytes_read,
-                                                length);
-            bytes_read += count;
-            if (count == 0)
-                buffer->flags |= PIO_BF_UNDERFLOW;
-        }
+        if (length > buffer->buffer_size)
+            bytes_read += vtable->read_b(interp, handle, s + bytes_read, length);
 
         /* Else, if we need to read an amount that the buffer can handle, fill
            the buffer. */
@@ -622,8 +617,6 @@ Parrot_io_buffer_fill(PARROT_INTERP, ARGMOD_NULLOK(IO_BUFFER *buffer),
             return BUFFER_USED_SIZE(buffer);
         read_bytes = vtable->read_b(interp, handle, buffer->buffer_end,
                                     available_size);
-        if (read_bytes == 0)
-            buffer->flags |= PIO_BF_UNDERFLOW;
 
         buffer->buffer_end += read_bytes;
         BUFFER_ASSERT_SANITY(buffer);
@@ -755,7 +748,7 @@ io_buffer_find_string_marker(PARROT_INTERP, ARGMOD(IO_BUFFER *buffer),
 
         /* If we've hit EOF and don't have the terminator, we'll never have it,
            so just return all the bytes in the buffer. */
-        if (vtable->is_eof(interp, handle))
+        if (IO_IS_EOF(interp, handle))
             return bounds->bytes;
 
         /* If the delimiter is multiple bytes, we might have part of it. We need

@@ -222,9 +222,9 @@ Parrot_io_internal_async(PARROT_INTERP, ARGMOD(PMC *pmc), INTVAL async)
             rflags &= ~O_ASYNC;
         if ((rflags = fcntl(file_descriptor, F_SETFL, rflags)) == 0) {
             if (async)
-               Parrot_io_set_flags(interp, pmc, Parrot_io_get_flags(interp, pmc) | PIO_F_ASYNC);
+                Parrot_io_raise_flag(interp, pmc, PIO_F_ASYNC);
             else
-               Parrot_io_set_flags(interp, pmc, Parrot_io_get_flags(interp, pmc) & ~PIO_F_ASYNC);
+                Parrot_io_clear_flag(interp, pmc, PIO_F_ASYNC);
         }
         return rflags;
     }
